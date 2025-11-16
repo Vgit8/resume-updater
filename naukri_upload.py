@@ -19,14 +19,24 @@ PROFILE_URL = os.getenv("NAUKRI_PROFILE_URL", "")  # optional direct profile/res
 RESUME_PATH = Path(os.getenv("RESUME_PATH", "Viswanatha_Resume_Updated.docx"))
 
 def make_driver():
+    # Automatically install correct ChromeDriver
+    chromedriver_autoinstaller.install()
+
     opts = Options()
-    opts.add_argument("--no-sandbox")
-    opts.add.add_argument("--disable-dev-shm-usage")
+
     opts.add_argument("--headless=new")
+    opts.add_argument("--no-sandbox")
+    opts.add_argument("--disable-dev-shm-usage")
     opts.add_argument("--window-size=1920,1080")
-    opts.add_argument("--disable-blink-features=AutomationControlled")
-    driver = webdriver.Chrome(options=opts)
+    opts.add_argument("--disable-gpu")
+
+    from selenium.webdriver.chrome.service import Service
+    service = Service()
+
+    driver = webdriver.Chrome(service=service, options=opts)
+    driver.implicitly_wait(8)
     return driver
+
 
 def find_and_upload_file(driver, resume_path):
     inputs = driver.find_elements(By.XPATH, "//input[@type='file']")
