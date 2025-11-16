@@ -1,1 +1,8 @@
+<<<<<<< HEAD
 python-docx
+=======
+selenium
+python-docx
+beautifulsoup4
+requests
+>>>>>>> c8e8d2270090c9b16849c37651222a6fb5cdcda0
