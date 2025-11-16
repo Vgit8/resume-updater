@@ -28,17 +28,30 @@ jobs:
           which chromedriver || true
 
       - name: Run updater
-        env:
-          NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
-          NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
-          NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
-          RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume.docx
-          BACKUP_DIR: ${{ github.workspace }}/resume_backups
-        run: "auto_update_resume.py"
+       - name: Run updater (diagnostic)
+  env:
+    NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
+    NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
+    NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
+    RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
+    BACKUP_DIR: ${{ github.workspace }}/resume_backups
+  run: |
+    echo "WORKSPACE: $GITHUB_WORKSPACE"
+    echo "PWD: $(pwd)"
+    echo "Listing repository root:"
+    ls -la "${{ github.workspace }}" || true
+    echo "Listing current directory:"
+    ls -la . || true
+    echo "Listing .github/workflows:"
+    ls -la .github || true
+    ls -la .github/workflows || true
+    # try to run the script by absolute path just in case
+    if [ -f "${{ github.workspace }}/auto_update_resume.py" ]; then
+      echo "Found script at ${{ github.workspace }}/auto_update_resume.py - running it"
+      python "${{ github.workspace }}/auto_update_resume.py"
+    else
+      echo "Script not found at workspace root. Attempting to find any .py files:"
+      find . -maxdepth 3 -type f -name "*.py" -print || true
+      exit 2
+    fi
 
-
-      - name: Upload updated resume
-        uses: actions/upload-artifact@v4
-        with:
-          name: updated-resume
-          path: Viswanatha_Resume.docx
