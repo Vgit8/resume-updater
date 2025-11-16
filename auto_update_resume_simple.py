@@ -32,7 +32,8 @@ def extract_keywords(texts):
         if re.search(r"\\b" + re.escape(b) + r"\\b", joined, re.IGNORECASE):
             keywords.add(b)
     # also pick capitalized words of length>3 as candidate keywords (simple)
-    for w in re.findall(r"\\b[A-Z][a-zA-Z0-9\\-/]{3,}\\b", joined):
+    for w in re.findall(r"\b[A-Z][A-Za-z0-9/\-]{3,}\b", joined):
+
         if len(keywords) >= KEYWORDS_LIMIT:
             break
         keywords.add(w)
