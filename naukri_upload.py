@@ -3,7 +3,8 @@
 # Notes:
 #  - If Naukri shows a captcha this script will stop and report it.
 #  - Selectors may change; we'll add helpful debug output if upload fails.
-
+import chromedriver_autoinstaller
+chromedriver_autoinstaller.install()
 import os
 import time
 from pathlib import Path
