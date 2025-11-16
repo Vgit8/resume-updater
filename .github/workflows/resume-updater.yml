@@ -10,15 +10,19 @@ on:
 jobs:
   update-resume:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install selenium python-docx beautifulsoup4 requests
 
       - name: Install Chrome and Chromedriver
@@ -27,31 +31,35 @@ jobs:
           sudo apt install -y google-chrome-stable chromium-chromedriver || true
           which chromedriver || true
 
-      - name: Run updater
-       - name: Run updater (diagnostic)
-  env:
-    NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
-    NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
-    NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
-    RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
-    BACKUP_DIR: ${{ github.workspace }}/resume_backups
-  run: |
-    echo "WORKSPACE: $GITHUB_WORKSPACE"
-    echo "PWD: $(pwd)"
-    echo "Listing repository root:"
-    ls -la "${{ github.workspace }}" || true
-    echo "Listing current directory:"
-    ls -la . || true
-    echo "Listing .github/workflows:"
-    ls -la .github || true
-    ls -la .github/workflows || true
-    # try to run the script by absolute path just in case
-    if [ -f "${{ github.workspace }}/auto_update_resume.py" ]; then
-      echo "Found script at ${{ github.workspace }}/auto_update_resume.py - running it"
-      python "${{ github.workspace }}/auto_update_resume.py"
-    else
-      echo "Script not found at workspace root. Attempting to find any .py files:"
-      find . -maxdepth 3 -type f -name "*.py" -print || true
-      exit 2
-    fi
+      - name: Run updater (diagnostic)
+        env:
+          NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
+          NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
+          NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
+          RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
+          BACKUP_DIR: ${{ github.workspace }}/resume_backups
+        run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "PWD: $(pwd)"
+          echo "List workspace root:"
+          ls -la "${{ github.workspace }}" || true
+          echo "List current directory:"
+          ls -la . || true
+          echo "List .github and workflows:"
+          ls -la .github || true
+          ls -la .github/workflows || true
+          # Try running script by absolute path if present
+          if [ -f "${{ github.workspace }}/auto_update_resume.py" ]; then
+            echo "Found script at ${{ github.workspace }}/auto_update_resume.py"
+            python "${{ github.workspace }}/auto_update_resume.py"
+          else
+            echo "Script not found at workspace root. Searching for .py files:"
+            find . -maxdepth 4 -type f -name "*.py" -print || true
+            exit 2
+          fi
 
+      - name: Upload updated resume
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-resume
+          path: Viswanatha_Resume_Updated.docx
