@@ -34,7 +34,8 @@ jobs:
           NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
           RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
           BACKUP_DIR: ${{ github.workspace }}/resume_backups
-        run: python auto_update_resume.py
+        run: "auto_update_resume.py"
+
 
       - name: Upload updated resume
         uses: actions/upload-artifact@v4
