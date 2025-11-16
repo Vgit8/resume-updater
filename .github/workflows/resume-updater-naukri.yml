@@ -1,0 +1,49 @@
+name: Resume Updater (Naukri v2)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 2 * * *'   # 08:00 IST
+    - cron: '30 9 * * *'   # 15:00 IST
+    - cron: '30 14 * * *'  # 20:00 IST
+
+jobs:
+  update-resume:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install selenium chromedriver-autoinstaller
+
+      - name: Install Chrome (best effort)
+        run: |
+          sudo apt-get update -y
+          wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y /tmp/chrome.deb || true
+
+      - name: Run resume updater
+        run: python auto_update_resume_simple.py
+
+      - name: Upload updated resume
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-resume
+          path: Viswanatha_Resume_Updated.docx
+
+      - name: Upload resume to Naukri
+        env:
+          RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
+          NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
+          NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
+          NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
+        run: python naukri_upload.py
