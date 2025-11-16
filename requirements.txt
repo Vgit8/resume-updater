@@ -1,0 +1,4 @@
+selenium
+python-docx
+beautifulsoup4
+requests

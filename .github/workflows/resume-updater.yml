@@ -1,0 +1,43 @@
+name: Resume Updater (Naukri)
+
+on:
+  schedule:
+    - cron: '30 2 * * *'
+    - cron: '30 9 * * *'
+    - cron: '30 14 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-resume:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install selenium python-docx beautifulsoup4 requests
+
+      - name: Install Chrome and Chromedriver
+        run: |
+          sudo apt update
+          sudo apt install -y google-chrome-stable chromium-chromedriver || true
+          which chromedriver || true
+
+      - name: Run updater
+        env:
+          NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
+          NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
+          NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
+          RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
+          BACKUP_DIR: ${{ github.workspace }}/resume_backups
+        run: python auto_update_resume.py
+
+      - name: Upload updated resume
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-resume
+          path: Viswanatha_Resume_Updated.docx
