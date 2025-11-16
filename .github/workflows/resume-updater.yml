@@ -31,7 +31,7 @@ jobs:
           sudo apt install -y google-chrome-stable chromium-chromedriver || true
           which chromedriver || true
 
-      - name: Run updater (diagnostic)
+           - name: Run updater (diagnostic)
         env:
           NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
           NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
@@ -41,25 +41,13 @@ jobs:
         run: |
           echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
           echo "PWD: $(pwd)"
-          echo "List workspace root:"
-          ls -la "${{ github.workspace }}" || true
-          echo "List current directory:"
-          ls -la . || true
-          echo "List .github and workflows:"
-          ls -la .github || true
-          ls -la .github/workflows || true
-          # Try running script by absolute path if present
-          if [ -f "${{ github.workspace }}/auto_update_resume.py" ]; then
-            echo "Found script at ${{ github.workspace }}/auto_update_resume.py"
-            python "${{ github.workspace }}/auto_update_resume.py"
-          else
-            echo "Script not found at workspace root. Searching for .py files:"
-            find . -maxdepth 4 -type f -name "*.py" -print || true
-            exit 2
-          fi
-
-      - name: Upload updated resume
-        uses: actions/upload-artifact@v4
-        with:
-          name: updated-resume
-          path: Viswanatha_Resume_Updated.docx
+          echo "Listing full tree (top 3 levels):"
+          ls -la .
+          find . -maxdepth 3 -type d -print
+          echo "All .py files:"
+          find . -type f -name "*.py" -print || true
+          echo "Attempt running common paths:"
+          python ./auto_update_resume.py || true
+          python "${{ github.workspace }}/auto_update_resume.py" || true
+          python "${{ github.workspace }}/resume-updater/auto_update_resume.py" || true
+          exit 2
