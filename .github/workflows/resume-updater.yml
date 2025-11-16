@@ -32,7 +32,7 @@ jobs:
           NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
           NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
           NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
-          RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
+          RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume.docx
           BACKUP_DIR: ${{ github.workspace }}/resume_backups
         run: "auto_update_resume.py"
 
@@ -41,4 +41,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: updated-resume
-          path: Viswanatha_Resume_Updated.docx
+          path: Viswanatha_Resume.docx
