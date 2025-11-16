@@ -24,32 +24,28 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install selenium
+          pip install chromedriver-autoinstaller
 
-      - name: Install Chrome and Chromedriver
+      - name: Install Chrome
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y wget unzip fontconfig
-          # install google chrome stable
           wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt install -y /tmp/chrome.deb || true
-          # try installing chromedriver package (may be present)
-          sudo apt-get install -y chromium-chromedriver || true
-          which chromedriver || true
 
       - name: Run resume updater
         run: python auto_update_resume_simple.py
 
-      - name: Upload updated resume (artifact)
+      - name: Upload updated resume
         uses: actions/upload-artifact@v4
         with:
           name: updated-resume
           path: Viswanatha_Resume_Updated.docx
 
-      - name: Upload resume to Naukri (Selenium)
+      - name: Upload resume to Naukri
         env:
           RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
           NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
           NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
           NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
-        run: |
-          python naukri_upload.py
+        run: python naukri_upload.py
