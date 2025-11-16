@@ -31,7 +31,7 @@ jobs:
           sudo apt install -y google-chrome-stable chromium-chromedriver || true
           which chromedriver || true
 
-           - name: Run updater (diagnostic)
+             - name: Run updater (full diagnostic)
         env:
           NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
           NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
@@ -39,15 +39,39 @@ jobs:
           RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
           BACKUP_DIR: ${{ github.workspace }}/resume_backups
         run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          echo "PWD: $(pwd)"
-          echo "Listing full tree (top 3 levels):"
-          ls -la .
-          find . -maxdepth 3 -type d -print
-          echo "All .py files:"
-          find . -type f -name "*.py" -print || true
-          echo "Attempt running common paths:"
-          python ./auto_update_resume.py || true
-          python "${{ github.workspace }}/auto_update_resume.py" || true
-          python "${{ github.workspace }}/resume-updater/auto_update_resume.py" || true
-          exit 2
+          echo "=== ENV ==="
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "PWD=$(pwd)"
+          echo "USER=$(whoami)"
+          echo
+          echo "=== LIST ROOT (one level) ==="
+          ls -la "${{ github.workspace }}" || true
+          echo
+          echo "=== LIST CURRENT DIR (one level) ==="
+          ls -la . || true
+          echo
+          echo "=== RECURSIVE TREE (top 3 levels) ==="
+          find "${{ github.workspace }}" -maxdepth 3 -type d -print || true
+          echo
+          echo "=== ALL PY FILES (show path) ==="
+          find "${{ github.workspace }}" -type f -name "*.py" -print || true
+          echo
+          echo "=== CAT the workflow file to confirm location ==="
+          echo "---- start .github/workflows/resume-updater.yml ----"
+          sed -n '1,200p' .github/workflows/resume-updater.yml || true
+          echo "---- end ----"
+          echo
+          echo "=== Attempt to run common paths (will not fail the job immediately) ==="
+          echo "try python ./auto_update_resume.py"
+          python ./auto_update_resume.py || echo "python ./auto_update_resume.py returned $?"
+          echo "try python \${GITHUB_WORKSPACE}/auto_update_resume.py"
+          python "${{ github.workspace }}/auto_update_resume.py" || echo "python workspace path returned $?"
+          echo "try python \${GITHUB_WORKSPACE}/resume-updater/auto_update_resume.py"
+          python "${{ github.workspace }}/resume-updater/auto_update_resume.py" || echo "python nested path returned $?"
+          echo
+          echo "=== Done diagnostic - exit with code 2 if script still missing ==="
+          # if script not found, exit non-zero
+          if ! find "${{ github.workspace }}" -type f -name "auto_update_resume.py" -print -quit; then
+            echo "ERROR: auto_update_resume.py not found in workspace"
+            exit 2
+          fi
