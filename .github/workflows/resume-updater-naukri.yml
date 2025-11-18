@@ -1,49 +1,71 @@
-name: Resume Updater (Naukri v2)
+name: Resume updater (Naukri) - Selenium
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: '30 2 * * *'   # 08:00 IST
     - cron: '30 9 * * *'   # 15:00 IST
     - cron: '30 14 * * *'  # 20:00 IST
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  actions: write
 
 jobs:
   update-resume:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install system dependencies and Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip xvfb libnss3 libgconf-2-4 fonts-liberation libappindicator3-1 libxss1 libasound2 chromium-browser
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install selenium chromedriver-autoinstaller
 
-      - name: Install Chrome (best effort)
+      - name: Create artifact folders
+        run: mkdir -p artifacts screenshots logs
+
+      - name: Run resume updater (Selenium)
+        env:
+          NAUKRI_EMAIL: ${{ secrets.NAUKRI_EMAIL }}
+          NAUKRI_PASSWORD: ${{ secrets.NAUKRI_PASSWORD }}
+          # ensure Chrome path in case script needs it
+          CHROME_PATH: /usr/bin/chromium-browser
         run: |
-          sudo apt-get update -y
-          wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt install -y /tmp/chrome.deb || true
+          set -o pipefail
+          python naukri_upload.py 2>&1 | tee logs/script_stdout.txt
+          echo "SCRIPT_EXIT=$?" > logs/exitcode.txt
+        shell: bash
 
-      - name: Run resume updater
-        run: python auto_update_resume_simple.py
-
-      - name: Upload updated resume
+      - name: Upload debug artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: updated-resume
-          path: Viswanatha_Resume_Updated.docx
-
-      - name: Upload resume to Naukri
-        env:
-          RESUME_PATH: ${{ github.workspace }}/Viswanatha_Resume_Updated.docx
-          NAUKRI_USER: ${{ secrets.NAUKRI_USER }}
-          NAUKRI_PASS: ${{ secrets.NAUKRI_PASS }}
-          NAUKRI_PROFILE_URL: ${{ secrets.NAUKRI_PROFILE_URL }}
-        run: python naukri_upload.py
+          name: resume-update-debug
+          path: |
+            screenshots/**
+            artifacts/**
+            logs/**
